@@ -291,6 +291,11 @@ def handler(job):
         seed = job_input.get("seed")
         camera_lora = job_input.get("camera_lora", "static")
 
+        # Validate camera_lora
+        if camera_lora not in CAMERA_LORAS:
+            logger.warning(f"Unknown camera_lora '{camera_lora}', using 'static'")
+            camera_lora = "static"
+
         # Validate duration
         if duration not in [10, 15, 20]:
             logger.warning(f"Unusual duration: {duration}s, using anyway")
