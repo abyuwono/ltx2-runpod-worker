@@ -103,19 +103,40 @@ LTX-2 requires dimensions divisible by 32. Supported landscape resolutions:
 
 Note: 1088 (not 1080) for height due to 32-divisibility requirement.
 
-## Camera LoRA Files
+## Camera LoRA Reference
 
-Replace `your_camera_lora.safetensors` with:
+The handler accepts `camera_lora` parameter with these values:
 
-| Movement | LoRA File |
-|----------|-----------|
-| Static | `ltx-2-19b-lora-camera-control-static.safetensors` |
-| Dolly In | `ltx-2-19b-lora-camera-control-dolly-in.safetensors` |
-| Dolly Out | `ltx-2-19b-lora-camera-control-dolly-out.safetensors` |
-| Dolly Left | `ltx-2-19b-lora-camera-control-dolly-left.safetensors` |
-| Dolly Right | `ltx-2-19b-lora-camera-control-dolly-right.safetensors` |
-| Jib Up | `ltx-2-19b-lora-camera-control-jib-up.safetensors` |
-| Jib Down | `ltx-2-19b-lora-camera-control-jib-down.safetensors` |
+| API Value | Movement | LoRA File |
+|-----------|----------|-----------|
+| `static` | Static camera (default) | `ltx-2-19b-lora-camera-control-static.safetensors` |
+| `dolly_in` | Move camera forward | `ltx-2-19b-lora-camera-control-dolly-in.safetensors` |
+| `dolly_out` | Move camera backward | `ltx-2-19b-lora-camera-control-dolly-out.safetensors` |
+| `dolly_left` | Move camera left | `ltx-2-19b-lora-camera-control-dolly-left.safetensors` |
+| `dolly_right` | Move camera right | `ltx-2-19b-lora-camera-control-dolly-right.safetensors` |
+| `jib_up` | Tilt camera up | `ltx-2-19b-lora-camera-control-jib-up.safetensors` |
+| `jib_down` | Tilt camera down | `ltx-2-19b-lora-camera-control-jib-down.safetensors` |
+
+### Usage
+
+```json
+{
+  "prompt": "A serene mountain landscape",
+  "camera_lora": "dolly_in"
+}
+```
+
+Invalid values fall back to `static` with a warning logged.
+
+### Supported LoRAs Summary
+
+| LoRA Type | Status | Notes |
+|-----------|--------|-------|
+| Camera Control (7) | Supported | All dolly/jib movements |
+| Distilled LoRA | Auto | Applied in Pro mode workflows |
+| Spatial Upscaler | Always-on | Built into pipeline |
+| Detailer IC-LoRA | Not supported | V2V only (future feature) |
+| Depth/Canny/Pose IC-LoRAs | Not supported | Advanced I2V (future feature) |
 
 ## Handler Implementation Notes
 
