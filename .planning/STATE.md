@@ -3,8 +3,8 @@
 ## Current State
 
 **Milestone:** 1 - LTX-2 RunPod Worker v1.0
-**Phase:** 6 - Frontend Integration
-**Status:** Not Started
+**Phase:** Completed
+**Status:** Milestone Complete
 
 ## Progress
 
@@ -15,7 +15,7 @@
 | 3 | Camera & Quality LoRAs | Completed | 1 |
 | 4 | Dockerfile & Models | Completed | 1 |
 | 5 | Backend Integration | Completed | 1 |
-| 6 | Frontend Integration | Not Started | — |
+| 6 | Frontend Integration | Completed | 1 |
 
 ## Recent Activity
 
@@ -26,6 +26,8 @@
 - 2026-01-12: Phase 3 completed - camera validation and docs
 - 2026-01-12: Phase 4 completed - Dockerfile and entrypoint.sh created
 - 2026-01-12: Phase 5 completed - Backend integration (provider, pricing, handler)
+- 2026-01-12: Phase 6 completed - Frontend UI integration
+- 2026-01-12: **Milestone 1 complete** - Ready for deployment
 
 ## Key Decisions
 
@@ -37,6 +39,7 @@
 | Pre-baked models in Docker | Faster cold starts, no runtime downloads |
 | Full precision checkpoints | Better quality vs fp8 |
 | Separate RunPod provider | Clean separation from WAN provider |
+| AiVideoTask interface extended | Type safety for LTX-2 camera_lora field |
 
 ## Deployment Notes
 
@@ -63,6 +66,17 @@
   "image_urls": ["url"] (I2V only)
 }
 ```
+
+## Deployment Checklist
+
+- [ ] Build Docker image: `docker build -t ltx2-worker runpod/ltx2/`
+- [ ] Push to registry (Docker Hub or RunPod)
+- [ ] Create RunPod serverless endpoint
+- [ ] Set `RUNPOD_LTX_ENDPOINT_ID` in backend environment
+- [ ] Test T2V generation through UI
+- [ ] Test I2V generation through UI
+- [ ] Verify webhook callback works
+- [ ] Monitor first few jobs for errors
 
 ---
 *Last updated: 2026-01-12*
