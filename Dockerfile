@@ -31,6 +31,9 @@ RUN pip install --upgrade pip && \
 # Enable HF transfer for faster downloads
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
 
+# HuggingFace token for gated models (pass at build time: --build-arg HF_TOKEN=xxx)
+ARG HF_TOKEN
+
 WORKDIR /
 
 # Clone ComfyUI
@@ -98,10 +101,11 @@ RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-contr
 RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-control-jib-down.safetensors \
     https://huggingface.co/Lightricks/LTX-2-19b-LoRA-Camera-Control-Jib-Down/resolve/main/ltx-2-19b-lora-camera-control-jib-down.safetensors
 
-# Download Gemma Text Encoder
+# Download Gemma Text Encoder (requires HF authentication)
 RUN huggingface-cli download google/gemma-3-12b-it-qat-q4_0-unquantized \
     --local-dir /ComfyUI/models/text_encoders/gemma-3-12b-it-qat-q4_0-unquantized \
-    --local-dir-use-symlinks False
+    --local-dir-use-symlinks False \
+    --token ${HF_TOKEN}
 
 # Copy handler, workflows, and entrypoint
 COPY handler.py /handler.py
