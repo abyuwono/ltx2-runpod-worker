@@ -102,10 +102,19 @@ RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-contr
     https://huggingface.co/Lightricks/LTX-2-19b-LoRA-Camera-Control-Jib-Down/resolve/main/ltx-2-19b-lora-camera-control-jib-down.safetensors
 
 # Download Gemma Text Encoder (requires HF authentication)
-RUN huggingface-cli download google/gemma-3-12b-it-qat-q4_0-unquantized \
-    --local-dir /ComfyUI/models/text_encoders/gemma-3-12b-it-qat-q4_0-unquantized \
-    --local-dir-use-symlinks False \
-    --token ${HF_TOKEN}
+# Must pass --build-arg HF_TOKEN=hf_xxx when building
+# Token must have access to: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
+RUN if [ -z "${HF_TOKEN}" ]; then \
+        echo "ERROR: HF_TOKEN build argument is required for Gemma model download"; \
+        echo "Usage: docker build --build-arg HF_TOKEN=hf_xxx ..."; \
+        echo "Get token from: https://huggingface.co/settings/tokens"; \
+        echo "Accept license at: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized"; \
+        exit 1; \
+    fi && \
+    huggingface-cli login --token "${HF_TOKEN}" && \
+    huggingface-cli download google/gemma-3-12b-it-qat-q4_0-unquantized \
+        --local-dir /ComfyUI/models/text_encoders/gemma-3-12b-it-qat-q4_0-unquantized \
+        --local-dir-use-symlinks False
 
 # Copy handler, workflows, and entrypoint
 COPY handler.py /handler.py

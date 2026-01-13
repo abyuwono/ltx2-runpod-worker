@@ -2,11 +2,17 @@
 
 ## Open Enhancements
 
-None
+*No open issues*
 
 ---
 
 ## Closed Enhancements
+
+### ISS-006: HF_TOKEN Build Error in RunPod
+**Closed:** 2026-01-14 - Fixed Dockerfile to use `huggingface-cli login` before download
+**Original Error:** Build failed with exit code 2 when downloading Gemma model, even with HF_TOKEN set
+**Root Cause:** The `--token` flag for `huggingface-cli download` may not work correctly in all environments
+**Resolution:** Changed to use `huggingface-cli login --token "${HF_TOKEN}"` before the download command, which properly authenticates the session. Also added validation to check if token is empty with clear error messages.
 
 ### ISS-005: Remove "Landscape only" label
 **Closed:** 2026-01-12 - Simplified aspect ratio label
