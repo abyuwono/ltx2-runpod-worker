@@ -2,11 +2,22 @@
 
 ## Open Enhancements
 
-*No open issues - pending verification of ISS-008 fix*
+None - all issues resolved.
 
 ---
 
 ## Closed Enhancements
+
+### ISS-009: Gemma Model License Not Accepted
+**Closed:** 2026-01-14 - Root cause identified: HuggingFace account needs to accept Gemma license
+**Original Error:** Build failed at Gemma download with exit code 1, even with valid HF_TOKEN
+**Root Cause:** Gemma (`google/gemma-3-12b-it-qat-q4_0-unquantized`) is a **gated model** on HuggingFace. The HF_TOKEN is valid, but the account hasn't accepted Google's Gemma usage terms.
+**Resolution:**
+1. Log into HuggingFace with the account that owns the HF_TOKEN
+2. Navigate to: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
+3. Click the button to accept Google's Gemma usage terms (approval is immediate)
+4. Re-run the Docker build
+**Note:** Dockerfile also updated with clearer error messaging for gated model access issues.
 
 ### ISS-008: Gemma Download - Use --token Flag Directly
 **Closed:** 2026-01-14 - Simplified to use --token flag with huggingface-cli download
@@ -63,4 +74,4 @@
 **Resolution:** Test client is optional (for debugging only). Backend provider handles API calls.
 
 ---
-*Last updated: 2026-01-14*
+*Last updated: 2026-01-14 (Issue review completed)*

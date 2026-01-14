@@ -101,25 +101,32 @@ RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-contr
 RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-control-jib-down.safetensors \
     https://huggingface.co/Lightricks/LTX-2-19b-LoRA-Camera-Control-Jib-Down/resolve/main/ltx-2-19b-lora-camera-control-jib-down.safetensors
 
-# Download Gemma Text Encoder (requires HF authentication)
+# Download Gemma Text Encoder (requires HF authentication + license acceptance)
 # Must pass --build-arg HF_TOKEN=hf_xxx when building
-# Token must have access to: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
+#
+# IMPORTANT: Gemma is a GATED MODEL - you must accept the license BEFORE building!
+#
+# SETUP STEPS:
+# 1. Get a HuggingFace token: https://huggingface.co/settings/tokens
+# 2. Accept Gemma license: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
+#    (Click "Agree and access repository" - approval is immediate)
+# 3. Build with: docker build --build-arg HF_TOKEN=hf_xxx ...
 #
 # TROUBLESHOOTING:
-# 1. Ensure your HF token has "Read access to contents of all public gated repos you can access"
-# 2. Accept the Gemma license at: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
-# 3. Token format should be: hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-# 4. Make sure token is a READ token (not a write-only token)
+# - "403 Forbidden" or "Access denied": You haven't accepted the Gemma license
+# - "401 Unauthorized": Token is invalid or doesn't have read permissions
+# - Token format should be: hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (37+ chars)
 #
 RUN set -ex && \
     echo "=== HuggingFace Token Validation ===" && \
     if [ -z "${HF_TOKEN}" ]; then \
+        echo ""; \
         echo "ERROR: HF_TOKEN build argument is required for Gemma model download"; \
         echo ""; \
         echo "Usage: docker build --build-arg HF_TOKEN=hf_xxx ..."; \
         echo ""; \
         echo "Get token from: https://huggingface.co/settings/tokens"; \
-        echo "Accept license at: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized"; \
+        echo ""; \
         exit 1; \
     fi && \
     echo "Token provided: $(echo "${HF_TOKEN}" | cut -c1-10)..." && \
@@ -133,13 +140,33 @@ RUN set -ex && \
     echo "=== HuggingFace CLI Version ===" && \
     huggingface-cli --version && \
     echo "" && \
-    echo "=== Downloading Gemma Model (using --token flag) ===" && \
-    echo "Model: google/gemma-3-12b-it-qat-q4_0-unquantized" && \
+    echo "=== Downloading Gemma Model ===" && \
+    echo "Model: google/gemma-3-12b-it-qat-q4_0-unquantized (GATED)" && \
     echo "This may take a while (~25GB)..." && \
+    echo "" && \
     huggingface-cli download google/gemma-3-12b-it-qat-q4_0-unquantized \
         --local-dir /ComfyUI/models/text_encoders/gemma-3-12b-it-qat-q4_0-unquantized \
         --local-dir-use-symlinks False \
-        --token "${HF_TOKEN}" && \
+        --token "${HF_TOKEN}" || \
+    { \
+        echo ""; \
+        echo "======================================================="; \
+        echo "DOWNLOAD FAILED - Most likely cause: LICENSE NOT ACCEPTED"; \
+        echo "======================================================="; \
+        echo ""; \
+        echo "Gemma is a GATED model. Before building, you must:"; \
+        echo ""; \
+        echo "1. Log into HuggingFace with the account that owns this token"; \
+        echo "2. Go to: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized"; \
+        echo "3. Click 'Agree and access repository' to accept Google's terms"; \
+        echo "4. Re-run this build"; \
+        echo ""; \
+        echo "Other possible causes:"; \
+        echo "- Token doesn't have 'Read' permission for gated repos"; \
+        echo "- Token is invalid or expired"; \
+        echo ""; \
+        exit 1; \
+    } && \
     echo "" && \
     echo "=== Gemma Download Complete ==="
 
