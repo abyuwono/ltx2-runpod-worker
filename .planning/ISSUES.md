@@ -8,6 +8,18 @@
 
 ## Closed Enhancements
 
+### ISS-007: Gemma Download Build Failure - Verbose Diagnostics
+**Closed:** 2026-01-14 - Added comprehensive debugging output to Dockerfile
+**Original Error:** Build failed with exit code 1 during Gemma model download, with unclear error messages
+**Root Cause:** Likely token permission issue or license not accepted, but error output was insufficient to diagnose
+**Resolution:** Enhanced Dockerfile Gemma download section with:
+- Token format and length validation
+- `huggingface-cli --version` output
+- `huggingface-cli whoami` authentication verification
+- `--add-to-git-credential` flag for better token persistence
+- Step-by-step progress messages for easier debugging
+- Troubleshooting comments for common issues
+
 ### ISS-006: HF_TOKEN Build Error in RunPod
 **Closed:** 2026-01-14 - Fixed Dockerfile to use `huggingface-cli login` before download
 **Original Error:** Build failed with exit code 2 when downloading Gemma model, even with HF_TOKEN set
@@ -40,4 +52,4 @@
 **Resolution:** Test client is optional (for debugging only). Backend provider handles API calls.
 
 ---
-*Last updated: 2026-01-12*
+*Last updated: 2026-01-14*

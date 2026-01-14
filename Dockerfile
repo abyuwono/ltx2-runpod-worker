@@ -104,17 +104,46 @@ RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-contr
 # Download Gemma Text Encoder (requires HF authentication)
 # Must pass --build-arg HF_TOKEN=hf_xxx when building
 # Token must have access to: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
-RUN if [ -z "${HF_TOKEN}" ]; then \
+#
+# TROUBLESHOOTING:
+# 1. Ensure your HF token has "Read access to contents of all public gated repos you can access"
+# 2. Accept the Gemma license at: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
+# 3. Token format should be: hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#
+RUN set -e && \
+    echo "=== HuggingFace Token Validation ===" && \
+    if [ -z "${HF_TOKEN}" ]; then \
         echo "ERROR: HF_TOKEN build argument is required for Gemma model download"; \
         echo "Usage: docker build --build-arg HF_TOKEN=hf_xxx ..."; \
         echo "Get token from: https://huggingface.co/settings/tokens"; \
         echo "Accept license at: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized"; \
         exit 1; \
     fi && \
-    huggingface-cli login --token "${HF_TOKEN}" && \
+    echo "Token provided: ${HF_TOKEN:0:10}..." && \
+    echo "Token length: ${#HF_TOKEN} characters" && \
+    if [ "${#HF_TOKEN}" -lt 30 ]; then \
+        echo "ERROR: Token appears too short. HF tokens are typically 37+ characters."; \
+        exit 1; \
+    fi && \
+    echo "" && \
+    echo "=== HuggingFace CLI Version ===" && \
+    huggingface-cli --version && \
+    echo "" && \
+    echo "=== Logging in to HuggingFace ===" && \
+    huggingface-cli login --token "${HF_TOKEN}" --add-to-git-credential && \
+    echo "Login successful!" && \
+    echo "" && \
+    echo "=== Verifying Authentication ===" && \
+    huggingface-cli whoami && \
+    echo "" && \
+    echo "=== Downloading Gemma Model ===" && \
+    echo "Model: google/gemma-3-12b-it-qat-q4_0-unquantized" && \
+    echo "This may take a while (~25GB)..." && \
     huggingface-cli download google/gemma-3-12b-it-qat-q4_0-unquantized \
         --local-dir /ComfyUI/models/text_encoders/gemma-3-12b-it-qat-q4_0-unquantized \
-        --local-dir-use-symlinks False
+        --local-dir-use-symlinks False && \
+    echo "" && \
+    echo "=== Gemma Download Complete ==="
 
 # Copy handler, workflows, and entrypoint
 COPY handler.py /handler.py
