@@ -109,19 +109,23 @@ RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-contr
 # 1. Ensure your HF token has "Read access to contents of all public gated repos you can access"
 # 2. Accept the Gemma license at: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
 # 3. Token format should be: hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# 4. Make sure token is a READ token (not a write-only token)
 #
-RUN set -e && \
+RUN set -ex && \
     echo "=== HuggingFace Token Validation ===" && \
     if [ -z "${HF_TOKEN}" ]; then \
         echo "ERROR: HF_TOKEN build argument is required for Gemma model download"; \
+        echo ""; \
         echo "Usage: docker build --build-arg HF_TOKEN=hf_xxx ..."; \
+        echo ""; \
         echo "Get token from: https://huggingface.co/settings/tokens"; \
         echo "Accept license at: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized"; \
         exit 1; \
     fi && \
-    echo "Token provided: ${HF_TOKEN:0:10}..." && \
-    echo "Token length: ${#HF_TOKEN} characters" && \
-    if [ "${#HF_TOKEN}" -lt 30 ]; then \
+    echo "Token provided: $(echo "${HF_TOKEN}" | cut -c1-10)..." && \
+    TOKEN_LEN=$(printf '%s' "${HF_TOKEN}" | wc -c | tr -d ' ') && \
+    echo "Token length: ${TOKEN_LEN} characters" && \
+    if [ "${TOKEN_LEN}" -lt 30 ]; then \
         echo "ERROR: Token appears too short. HF tokens are typically 37+ characters."; \
         exit 1; \
     fi && \
@@ -129,19 +133,13 @@ RUN set -e && \
     echo "=== HuggingFace CLI Version ===" && \
     huggingface-cli --version && \
     echo "" && \
-    echo "=== Logging in to HuggingFace ===" && \
-    huggingface-cli login --token "${HF_TOKEN}" --add-to-git-credential && \
-    echo "Login successful!" && \
-    echo "" && \
-    echo "=== Verifying Authentication ===" && \
-    huggingface-cli whoami && \
-    echo "" && \
-    echo "=== Downloading Gemma Model ===" && \
+    echo "=== Downloading Gemma Model (using --token flag) ===" && \
     echo "Model: google/gemma-3-12b-it-qat-q4_0-unquantized" && \
     echo "This may take a while (~25GB)..." && \
     huggingface-cli download google/gemma-3-12b-it-qat-q4_0-unquantized \
         --local-dir /ComfyUI/models/text_encoders/gemma-3-12b-it-qat-q4_0-unquantized \
-        --local-dir-use-symlinks False && \
+        --local-dir-use-symlinks False \
+        --token "${HF_TOKEN}" && \
     echo "" && \
     echo "=== Gemma Download Complete ==="
 

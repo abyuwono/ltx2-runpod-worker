@@ -2,11 +2,22 @@
 
 ## Open Enhancements
 
-*No open issues*
+*No open issues - pending verification of ISS-008 fix*
 
 ---
 
 ## Closed Enhancements
+
+### ISS-008: Gemma Download - Use --token Flag Directly
+**Closed:** 2026-01-14 - Simplified to use --token flag with huggingface-cli download
+**Original Error:** Build still failing with exit code 1, `huggingface-cli login` approach not working in RunPod
+**Root Cause:** The `huggingface-cli login --add-to-git-credential` was failing silently in RunPod's build environment
+**Resolution:**
+- Removed separate login step
+- Pass `--token "${HF_TOKEN}"` directly to the `huggingface-cli download` command
+- Simplified shell parameter expansion to be more portable (`$(echo "${HF_TOKEN}" | cut -c1-10)` instead of `${HF_TOKEN:0:10}`)
+- Used `printf` and `wc -c` instead of `${#HF_TOKEN}` for token length check
+- Added `set -ex` for verbose error output
 
 ### ISS-007: Gemma Download Build Failure - Verbose Diagnostics
 **Closed:** 2026-01-14 - Added comprehensive debugging output to Dockerfile
