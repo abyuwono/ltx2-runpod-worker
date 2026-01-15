@@ -28,6 +28,7 @@
 - 2026-01-12: Phase 5 completed - Backend integration (provider, pricing, handler)
 - 2026-01-12: Phase 6 completed - Frontend UI integration
 - 2026-01-12: **Milestone 1 complete** - Ready for deployment
+- 2026-01-15: Fixed ISS-010 - ARG HF_TOKEN scope issue in Dockerfile
 
 ## Key Decisions
 
@@ -79,4 +80,4 @@
 - [ ] Monitor first few jobs for errors
 
 ---
-*Last updated: 2026-01-12*
+*Last updated: 2026-01-15*

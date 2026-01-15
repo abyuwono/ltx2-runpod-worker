@@ -117,6 +117,8 @@ RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-contr
 # - "401 Unauthorized": Token is invalid or doesn't have read permissions
 # - Token format should be: hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (37+ chars)
 #
+# Re-declare ARG here because Docker ARG scope is limited after many RUN layers
+ARG HF_TOKEN
 RUN set -ex && \
     echo "=== HuggingFace Token Validation ===" && \
     if [ -z "${HF_TOKEN}" ]; then \

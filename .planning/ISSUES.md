@@ -2,11 +2,17 @@
 
 ## Open Enhancements
 
-None - all issues resolved.
+*No open issues*
 
 ---
 
 ## Closed Enhancements
+
+### ISS-010: HF_TOKEN ARG Scope Lost During Docker Build
+**Closed:** 2026-01-15 - Fixed by re-declaring ARG before Gemma download step
+**Original Error:** Build failed with "HF_TOKEN build argument is required" even though token was passed via `--build-arg`. Logs showed `[ -z  ]` (empty string check) indicating the token value was lost.
+**Root Cause:** Docker `ARG` values have limited scope. The `ARG HF_TOKEN` at line 35 lost its value by the time the build reached step [21/29] (line ~120) due to many intermediate RUN layers.
+**Resolution:** Added second `ARG HF_TOKEN` declaration immediately before the Gemma download RUN command at line 121. This is the standard Docker pattern for ensuring ARG availability across many layers.
 
 ### ISS-009: Gemma Model License Not Accepted
 **Closed:** 2026-01-14 - Root cause identified: HuggingFace account needs to accept Gemma license
@@ -74,4 +80,4 @@ None - all issues resolved.
 **Resolution:** Test client is optional (for debugging only). Backend provider handles API calls.
 
 ---
-*Last updated: 2026-01-14 (Issue review completed)*
+*Last updated: 2026-01-15 (Issue review completed)*
