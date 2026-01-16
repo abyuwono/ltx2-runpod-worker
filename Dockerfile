@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # LTX-2 RunPod Serverless Worker
 # Includes ComfyUI, LTX-2 extension, and pre-baked models
 
@@ -30,9 +31,6 @@ RUN pip install --upgrade pip && \
 
 # Enable HF transfer for faster downloads
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
-
-# HuggingFace token for gated models (pass at build time: --build-arg HF_TOKEN=xxx)
-ARG HF_TOKEN
 
 WORKDIR /
 
@@ -102,7 +100,7 @@ RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-contr
     https://huggingface.co/Lightricks/LTX-2-19b-LoRA-Camera-Control-Jib-Down/resolve/main/ltx-2-19b-lora-camera-control-jib-down.safetensors
 
 # Download Gemma Text Encoder (requires HF authentication + license acceptance)
-# Must pass --build-arg HF_TOKEN=hf_xxx when building
+# Uses Docker BuildKit secrets for secure token handling
 #
 # IMPORTANT: Gemma is a GATED MODEL - you must accept the license BEFORE building!
 #
@@ -110,22 +108,30 @@ RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-contr
 # 1. Get a HuggingFace token: https://huggingface.co/settings/tokens
 # 2. Accept Gemma license: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
 #    (Click "Agree and access repository" - approval is immediate)
-# 3. Build with: docker build --build-arg HF_TOKEN=hf_xxx ...
+# 3. Build with:
+#    export HF_TOKEN=hf_xxx
+#    docker buildx build --secret id=HF_TOKEN,env=HF_TOKEN -t ltx2-worker .
+#
+# ALTERNATIVE (if BuildKit secrets not available):
+#    echo "hf_xxx" > /tmp/hf_token.txt
+#    docker buildx build --secret id=HF_TOKEN,src=/tmp/hf_token.txt -t ltx2-worker .
+#    rm /tmp/hf_token.txt
 #
 # TROUBLESHOOTING:
 # - "403 Forbidden" or "Access denied": You haven't accepted the Gemma license
 # - "401 Unauthorized": Token is invalid or doesn't have read permissions
 # - Token format should be: hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (37+ chars)
+# - "could not find HF_TOKEN": BuildKit not enabled or secret not passed correctly
 #
-# Re-declare ARG here because Docker ARG scope is limited after many RUN layers
-ARG HF_TOKEN
-RUN set -ex && \
+RUN --mount=type=secret,id=HF_TOKEN,required=true \
+    set -ex && \
     echo "=== HuggingFace Token Validation ===" && \
+    HF_TOKEN=$(cat /run/secrets/HF_TOKEN) && \
     if [ -z "${HF_TOKEN}" ]; then \
         echo ""; \
-        echo "ERROR: HF_TOKEN build argument is required for Gemma model download"; \
+        echo "ERROR: HF_TOKEN secret is empty"; \
         echo ""; \
-        echo "Usage: docker build --build-arg HF_TOKEN=hf_xxx ..."; \
+        echo "Usage: docker buildx build --secret id=HF_TOKEN,env=HF_TOKEN ..."; \
         echo ""; \
         echo "Get token from: https://huggingface.co/settings/tokens"; \
         echo ""; \

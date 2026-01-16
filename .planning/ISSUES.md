@@ -8,6 +8,17 @@
 
 ## Closed Enhancements
 
+### ISS-011: Docker Build HF_TOKEN Not Passed in RunPod
+**Closed:** 2026-01-16 - Fixed by switching from `--build-arg` to Docker BuildKit secrets
+**Original Error:** Build failed with "HF_TOKEN build argument is required" even with `--build-arg HF_TOKEN=xxx`. Logs showed `[ -z ]` (empty string check) - the token was lost during RunPod's build process.
+**Root Cause:** RunPod's GitHub integration builds images remotely but doesn't reliably pass `--build-arg` values. Docker also warns against using ARG for secrets ("SecretsUsedInArgOrEnv").
+**Resolution:**
+- Replaced `ARG HF_TOKEN` with Docker BuildKit secret mount: `RUN --mount=type=secret,id=HF_TOKEN`
+- Token is read from `/run/secrets/HF_TOKEN` during build, never stored in layers
+- Added `# syntax=docker/dockerfile:1` to enable BuildKit features
+- New build command: `docker buildx build --secret id=HF_TOKEN,env=HF_TOKEN -t ltx2-worker .`
+**Note:** For RunPod deployment, build locally with secrets, push to Docker Hub, then deploy from the pre-built image.
+
 ### ISS-010: HF_TOKEN ARG Scope Lost During Docker Build
 **Closed:** 2026-01-15 - Fixed by re-declaring ARG before Gemma download step
 **Original Error:** Build failed with "HF_TOKEN build argument is required" even though token was passed via `--build-arg`. Logs showed `[ -z  ]` (empty string check) indicating the token value was lost.
@@ -80,4 +91,4 @@
 **Resolution:** Test client is optional (for debugging only). Backend provider handles API calls.
 
 ---
-*Last updated: 2026-01-15 (Issue review completed)*
+*Last updated: 2026-01-16 (Issue review completed)*
