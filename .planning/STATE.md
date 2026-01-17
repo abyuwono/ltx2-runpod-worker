@@ -29,6 +29,8 @@
 - 2026-01-12: Phase 6 completed - Frontend UI integration
 - 2026-01-12: **Milestone 1 complete** - Ready for deployment
 - 2026-01-15: Fixed ISS-010 - ARG HF_TOKEN scope issue in Dockerfile
+- 2026-01-16: Fixed ISS-011 - Switched to Docker BuildKit secrets for HF_TOKEN
+- 2026-01-18: Fixed ISS-012 - Reverted to --build-arg for RunPod compatibility
 
 ## Key Decisions
 
@@ -70,9 +72,10 @@
 
 ## Deployment Checklist
 
-- [ ] Build Docker image: `docker build -t ltx2-worker runpod/ltx2/`
-- [ ] Push to registry (Docker Hub or RunPod)
-- [ ] Create RunPod serverless endpoint
+- [ ] Accept Gemma license: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
+- [ ] Deploy to RunPod via GitHub integration:
+  - Repository: Point to this repo
+  - Docker Build Arguments: `HF_TOKEN=hf_xxx` (your HuggingFace token)
 - [ ] Set `RUNPOD_LTX_ENDPOINT_ID` in backend environment
 - [ ] Test T2V generation through UI
 - [ ] Test I2V generation through UI
@@ -80,4 +83,4 @@
 - [ ] Monitor first few jobs for errors
 
 ---
-*Last updated: 2026-01-15*
+*Last updated: 2026-01-18*

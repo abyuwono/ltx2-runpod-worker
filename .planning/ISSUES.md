@@ -2,11 +2,22 @@
 
 ## Open Enhancements
 
-*No open issues*
+None
 
 ---
 
 ## Closed Enhancements
+
+### ISS-012: RunPod Build Fails with BuildKit Secrets
+**Closed:** 2026-01-18 - Fixed by switching from BuildKit secrets back to --build-arg
+**Original Error:** `secret HF_TOKEN: not found` when building via RunPod's GitHub integration
+**Root Cause:** RunPod's build environment doesn't support Docker BuildKit secrets (`--mount=type=secret`)
+**Resolution:**
+- Changed from `RUN --mount=type=secret,id=HF_TOKEN` to `ARG HF_TOKEN` + `--build-arg`
+- Removed `# syntax=docker/dockerfile:1` BuildKit requirement
+- For RunPod: Set `HF_TOKEN=hf_xxx` in the "Docker Build Arguments" field
+- Token is visible in build logs but this is acceptable for the HF token use case
+**Note:** This reverts ISS-011's approach. BuildKit secrets are more secure but incompatible with RunPod builds.
 
 ### ISS-011: Docker Build HF_TOKEN Not Passed in RunPod
 **Closed:** 2026-01-16 - Fixed by switching from `--build-arg` to Docker BuildKit secrets
