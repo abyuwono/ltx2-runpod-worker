@@ -8,6 +8,18 @@ None
 
 ## Closed Enhancements
 
+### ISS-013: RunPod --build-arg Also Fails
+**Closed:** 2026-01-18 - Fixed by moving Gemma download to runtime
+**Original Error:** `ERROR: HF_TOKEN build argument is required` - same as ISS-011, ARG value is empty
+**Root Cause:** RunPod's GitHub integration doesn't pass EITHER BuildKit secrets OR --build-arg values to Docker. Both approaches fail.
+**Resolution:**
+- Moved Gemma download from Dockerfile to entrypoint.sh (runtime download)
+- entrypoint.sh checks for HF_TOKEN env var and downloads Gemma on first startup
+- Set HF_TOKEN as environment variable in RunPod template (not build arg)
+- First cold start is slower (~5-10 min) but builds always succeed
+- Use network volume to cache models and avoid re-download
+**Note:** This is the final solution - runtime download is the only way to handle gated models with RunPod's GitHub integration.
+
 ### ISS-012: RunPod Build Fails with BuildKit Secrets
 **Closed:** 2026-01-18 - Fixed by switching from BuildKit secrets back to --build-arg
 **Original Error:** `secret HF_TOKEN: not found` when building via RunPod's GitHub integration
@@ -102,4 +114,4 @@ None
 **Resolution:** Test client is optional (for debugging only). Backend provider handles API calls.
 
 ---
-*Last updated: 2026-01-16 (Issue review completed)*
+*Last updated: 2026-01-18*

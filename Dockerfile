@@ -98,78 +98,14 @@ RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-contr
 RUN wget -q --show-progress -O /ComfyUI/models/loras/ltx-2-19b-lora-camera-control-jib-down.safetensors \
     https://huggingface.co/Lightricks/LTX-2-19b-LoRA-Camera-Control-Jib-Down/resolve/main/ltx-2-19b-lora-camera-control-jib-down.safetensors
 
-# Download Gemma Text Encoder (requires HF authentication + license acceptance)
+# NOTE: Gemma Text Encoder is downloaded at RUNTIME, not build time
+# This is because RunPod's build system doesn't support passing secrets/build-args
 #
-# IMPORTANT: Gemma is a GATED MODEL - you must accept the license BEFORE building!
-#
-# SETUP STEPS:
-# 1. Get a HuggingFace token: https://huggingface.co/settings/tokens
-# 2. Accept Gemma license: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
-#    (Click "Agree and access repository" - approval is immediate)
-# 3. Build with:
-#    docker build --build-arg HF_TOKEN=hf_xxx -t ltx2-worker .
-#
-# For RunPod: Set HF_TOKEN in the "Docker Build Arguments" field
-#
-# TROUBLESHOOTING:
-# - "403 Forbidden" or "Access denied": You haven't accepted the Gemma license
-# - "401 Unauthorized": Token is invalid or doesn't have read permissions
-# - Token format should be: hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (37+ chars)
-#
-ARG HF_TOKEN
-RUN set -ex && \
-    echo "=== HuggingFace Token Validation ===" && \
-    if [ -z "${HF_TOKEN}" ]; then \
-        echo ""; \
-        echo "ERROR: HF_TOKEN build argument is required"; \
-        echo ""; \
-        echo "Usage: docker build --build-arg HF_TOKEN=hf_xxx ..."; \
-        echo ""; \
-        echo "For RunPod: Set HF_TOKEN in Docker Build Arguments"; \
-        echo "Get token from: https://huggingface.co/settings/tokens"; \
-        echo ""; \
-        exit 1; \
-    fi && \
-    echo "Token provided: $(echo "${HF_TOKEN}" | cut -c1-10)..." && \
-    TOKEN_LEN=$(printf '%s' "${HF_TOKEN}" | wc -c | tr -d ' ') && \
-    echo "Token length: ${TOKEN_LEN} characters" && \
-    if [ "${TOKEN_LEN}" -lt 30 ]; then \
-        echo "ERROR: Token appears too short. HF tokens are typically 37+ characters."; \
-        exit 1; \
-    fi && \
-    echo "" && \
-    echo "=== HuggingFace CLI Version ===" && \
-    huggingface-cli --version && \
-    echo "" && \
-    echo "=== Downloading Gemma Model ===" && \
-    echo "Model: google/gemma-3-12b-it-qat-q4_0-unquantized (GATED)" && \
-    echo "This may take a while (~25GB)..." && \
-    echo "" && \
-    huggingface-cli download google/gemma-3-12b-it-qat-q4_0-unquantized \
-        --local-dir /ComfyUI/models/text_encoders/gemma-3-12b-it-qat-q4_0-unquantized \
-        --local-dir-use-symlinks False \
-        --token "${HF_TOKEN}" || \
-    { \
-        echo ""; \
-        echo "======================================================="; \
-        echo "DOWNLOAD FAILED - Most likely cause: LICENSE NOT ACCEPTED"; \
-        echo "======================================================="; \
-        echo ""; \
-        echo "Gemma is a GATED model. Before building, you must:"; \
-        echo ""; \
-        echo "1. Log into HuggingFace with the account that owns this token"; \
-        echo "2. Go to: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized"; \
-        echo "3. Click 'Agree and access repository' to accept Google's terms"; \
-        echo "4. Re-run this build"; \
-        echo ""; \
-        echo "Other possible causes:"; \
-        echo "- Token doesn't have 'Read' permission for gated repos"; \
-        echo "- Token is invalid or expired"; \
-        echo ""; \
-        exit 1; \
-    } && \
-    echo "" && \
-    echo "=== Gemma Download Complete ==="
+# SETUP STEPS FOR RUNPOD:
+# 1. Accept Gemma license: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
+# 2. Set HF_TOKEN environment variable in your RunPod template
+# 3. First startup will download Gemma (~25GB, takes several minutes)
+# 4. Subsequent startups skip download if model is cached in network volume
 
 # Copy handler, workflows, and entrypoint
 COPY handler.py /handler.py

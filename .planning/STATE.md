@@ -31,6 +31,7 @@
 - 2026-01-15: Fixed ISS-010 - ARG HF_TOKEN scope issue in Dockerfile
 - 2026-01-16: Fixed ISS-011 - Switched to Docker BuildKit secrets for HF_TOKEN
 - 2026-01-18: Fixed ISS-012 - Reverted to --build-arg for RunPod compatibility
+- 2026-01-18: Fixed ISS-013 - Moved Gemma download to runtime (final solution)
 
 ## Key Decisions
 
@@ -75,7 +76,8 @@
 - [ ] Accept Gemma license: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized
 - [ ] Deploy to RunPod via GitHub integration:
   - Repository: Point to this repo
-  - Docker Build Arguments: `HF_TOKEN=hf_xxx` (your HuggingFace token)
+  - Environment Variables: `HF_TOKEN=hf_xxx` (your HuggingFace token)
+  - **Note:** First cold start downloads Gemma (~25GB, 5-10 min). Use network volume to cache.
 - [ ] Set `RUNPOD_LTX_ENDPOINT_ID` in backend environment
 - [ ] Test T2V generation through UI
 - [ ] Test I2V generation through UI

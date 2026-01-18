@@ -1,13 +1,63 @@
 #!/bin/bash
 
 # LTX-2 RunPod Worker Entrypoint
-# Starts ComfyUI and then the RunPod handler
+# Downloads Gemma model if needed, starts ComfyUI, and runs the RunPod handler
 
 set -e
 
 echo "========================================="
 echo "LTX-2 RunPod Worker Starting..."
 echo "========================================="
+
+# Download Gemma model if not present (runtime download for RunPod compatibility)
+GEMMA_DIR="/ComfyUI/models/text_encoders/gemma-3-12b-it-qat-q4_0-unquantized"
+if [ ! -d "$GEMMA_DIR" ] || [ -z "$(ls -A $GEMMA_DIR 2>/dev/null)" ]; then
+    echo ""
+    echo "========================================="
+    echo "Downloading Gemma Model (one-time setup)"
+    echo "========================================="
+    echo ""
+
+    if [ -z "${HF_TOKEN}" ]; then
+        echo "ERROR: HF_TOKEN environment variable is required"
+        echo ""
+        echo "Set HF_TOKEN in your RunPod template environment variables:"
+        echo "  HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        echo ""
+        echo "Get token from: https://huggingface.co/settings/tokens"
+        echo "Accept license: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized"
+        exit 1
+    fi
+
+    echo "Token provided: $(echo "${HF_TOKEN}" | cut -c1-10)..."
+    echo "Model: google/gemma-3-12b-it-qat-q4_0-unquantized (~25GB)"
+    echo "This will take several minutes on first startup..."
+    echo ""
+
+    huggingface-cli download google/gemma-3-12b-it-qat-q4_0-unquantized \
+        --local-dir "$GEMMA_DIR" \
+        --local-dir-use-symlinks False \
+        --token "${HF_TOKEN}" || {
+        echo ""
+        echo "======================================================="
+        echo "DOWNLOAD FAILED"
+        echo "======================================================="
+        echo ""
+        echo "Most likely cause: LICENSE NOT ACCEPTED"
+        echo ""
+        echo "1. Go to: https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized"
+        echo "2. Click 'Agree and access repository'"
+        echo "3. Restart this worker"
+        echo ""
+        exit 1
+    }
+
+    echo ""
+    echo "Gemma download complete!"
+    echo ""
+else
+    echo "Gemma model already present, skipping download"
+fi
 
 # Start ComfyUI in the background
 echo "Starting ComfyUI..."
